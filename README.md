@@ -1,68 +1,50 @@
 # Event Booking Platform
 
-Spring Boot backend for **concerts, venues, and ticket booking**.
+Java **Spring Boot** backend for an event ticketing product: venues, concerts, accounts, and seat booking.
 
-Built as a production-style Java service: REST APIs, JPA, JWT security, and safe booking when two people try to take the last seat.
-
-**GitHub:** [antondahdal/SpringBoot-bookingApp](https://github.com/antondahdal/SpringBoot-bookingApp)
+This project is how I work with **Spring Boot in depth** (web, security, data, transactions) and with a **microservice architecture** (auth, catalog, booking, then an API gateway).
 
 ---
 
-## What it does today (running code)
+## Stack
 
-| Area | In this repo |
+- Java 17, **Spring Boot 3**
+- **REST** APIs, DTOs, exception handling
+- **Spring Security** (JWT, roles)
+- **Spring Data JPA** / Hibernate
+- SQL (H2 for local; PostgreSQL next)
+- Maven, layered Spring modules
+
+---
+
+## Architecture (microservices)
+
+The domain is split the way a real ticket platform is split — not one god service:
+
+| Service | Responsibility |
 |---|---|
-| API | REST: register/login, venues, events, book seats |
-| Security | Spring Security, JWT, roles (organizer / attendee) |
-| Data | Spring Data JPA, Hibernate, H2 (dev) — PostgreSQL on the path |
-| Booking | Transactional `book()` — row lock **and** `@Version` so two requests cannot oversell seats |
-| HTTP | DTOs, validation, Problem Details (`404` / `401` / `409`) |
-| Tests | Slice tests for booking HTTP (`201` / `401` / `409`) |
+| **Auth** | Register, login, JWT, roles |
+| **Catalog** | Venues and events |
+| **Booking** | Tickets and remaining seats |
+| **API gateway** | One entry for clients; routing, timeouts, retries |
 
-Layered layout: **controller → service → repository → database**.
+Booking owns inventory. Catalog owns the show. Auth owns identity. That is the microservice boundary this codebase is built toward.
 
 ```text
-Client  →  Spring Boot (monolith)  →  H2 / PostgreSQL
-              Auth | Events | Venues | Bookings
+                     ┌─────────────┐
+                     │ API Gateway │
+                     └──────┬──────┘
+            ┌───────────────┼───────────────┐
+            ▼               ▼               ▼
+       Auth service   Catalog service  Booking service
+            │               │               │
+            └───────────────┴───────────────┘
+                         SQL
 ```
 
 ---
 
-## Where it is going (roadmap)
-
-The app is a **modular monolith on purpose**, then it splits. Same product, more moving parts — typical mid-level Spring path.
-
-```text
-Now                         Next                         Later
-─────────────               ─────────────                ─────────────
-One Spring Boot app         3 services + HTTP            Gateway in front
-JWT, JPA, booking lock      Auth | Catalog | Booking     Resilience (timeout/retry)
-H2 / PostgreSQL             WebClient between them       Docker Compose
-                            Shared DB or per-service     Async notifications, metrics
-```
-
-| Phase | What a recruiter should read |
-|---|---|
-| **1 — now** | Spring Boot 3 monolith. REST, JPA, JWT, concurrent booking. |
-| **2 — next** | Split into **microservices** (auth, events/catalog, booking). Services talk over HTTP. |
-| **3 — after that** | API **gateway**, resilience (timeouts, retries), Docker Compose. |
-| **4 — polish** | Async (notifications), Actuator / metrics, demo-ready. |
-
-So: I **have** Spring Boot, security, JPA, and booking under load **in this repo**. Microservices, gateway, and Docker are the **next slices of this same project**, not a different toy.
-
----
-
-## Why the split (short)
-
-- **Auth** issues tokens. **Catalog** owns events and venues. **Booking** owns tickets and the seat counter.  
-- Booking keeps the **lock on the event row** (inventory). Other services do not take that lock.  
-- A gateway later is one door for the client; services stay behind it.
-
----
-
-## Run locally
-
-Java 17+, Maven wrapper:
+## Run
 
 ```bash
 ./mvnw spring-boot:run
@@ -70,11 +52,6 @@ Java 17+, Maven wrapper:
 
 Windows: `.\mvnw.cmd spring-boot:run`
 
-H2 console (dev): `/h2-console`  
-Profile: `dev` (`application-dev.properties`). JWT secret is **local only** — use an env var in any real deploy.
-
 ---
-
-## License
 
 Personal project — Anton Dahdal.
