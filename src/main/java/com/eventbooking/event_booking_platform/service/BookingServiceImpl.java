@@ -34,7 +34,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto book (BookingCreateRequestDto dto,long id){
         User user =userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(()->new ResourceNotFoundException("There is no Such User"));
        
-        Event event=eventRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
+        Event event=eventRepository.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
         Booking bookToSave= new Booking();
         bookToSave.setEvent(event);
         bookToSave.setSeats(dto.getSeats());

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.eventbooking.event_booking_platform.dto.EventCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
+import com.eventbooking.event_booking_platform.dto.EventUpdateRequestDto;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Event;
 import com.eventbooking.event_booking_platform.model.Venue;
@@ -64,6 +65,21 @@ public class EventServiceImpl implements EventService  {
             event.getTotalSeats(),
             event.getAvailableSeats()
         ));
+    }
+
+    @Override
+    public EventResponseDto updateEvent(Long id, EventUpdateRequestDto dto) {
+        Event event =eventRepository.findById(id).orElseThrow(()->  new ResourceNotFoundException("there is no Such Event "));
+       event.setTitle(dto.getTitle());
+      Event returnedEvent= eventRepository.save(event);
+       return new EventResponseDto(
+        returnedEvent.getId(),
+        returnedEvent.getVenue().getId(),
+        returnedEvent.getVenue().getName(),
+        returnedEvent.getTitle(),
+        returnedEvent.getDateTime(),
+        returnedEvent.getTotalSeats(),
+        returnedEvent.getAvailableSeats());
     }
 
 }
