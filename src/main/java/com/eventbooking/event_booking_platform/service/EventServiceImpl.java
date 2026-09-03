@@ -3,10 +3,12 @@ package com.eventbooking.event_booking_platform.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.eventbooking.event_booking_platform.dto.EventCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.EventUpdateRequestDto;
+import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Event;
 import com.eventbooking.event_booking_platform.model.Venue;
@@ -81,5 +83,31 @@ public class EventServiceImpl implements EventService  {
         returnedEvent.getTotalSeats(),
         returnedEvent.getAvailableSeats());
     }
+
+    @Override
+    @Transactional
+    public EventResponseDto reserveSeats(Long id, Integer seats) {
+        Event event=eventRepository.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
+        if(!checkSeats(event,seats)){
+          
+            throw new InsufficientSeatsException("there is no Enough Seats");
+       }
+       event.setAvailableSeats(event.getAvailableSeats()-seats);
+       Event returnedEvent=eventRepository.save(event);
+       return new EventResponseDto(
+        returnedEvent.getId(),
+        returnedEvent.getVenue().getId(),
+        returnedEvent.getVenue().getName(),
+        returnedEvent.getTitle(),
+        returnedEvent.getDateTime(),
+        returnedEvent.getTotalSeats(),
+        returnedEvent.getAvailableSeats());
+    
+    }
+
+    public boolean checkSeats(Event event,int seats){
+        if(event.getAvailableSeats()>=seats) return true;
+         return false;
+     }
 
 }

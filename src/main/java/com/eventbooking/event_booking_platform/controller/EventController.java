@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eventbooking.event_booking_platform.dto.EventCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.EventUpdateRequestDto;
+import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
 import com.eventbooking.event_booking_platform.service.EventService;
 
 import jakarta.validation.Valid;
@@ -50,4 +51,10 @@ public ResponseEntity<EventResponseDto> updateName(@PathVariable Long id ,@Valid
     return ResponseEntity.status(HttpStatus.OK).body(eventService.updateEvent(id, dto));
 }
     
+@PostMapping("/{id}/seat-reservations")
+public ResponseEntity<EventResponseDto> reserveSeats(@PathVariable Long id,@Valid @RequestBody SeatReservationRequestDto  seats ){
+    return ResponseEntity.status(HttpStatus.OK).body(eventService.reserveSeats(id, seats.getSeats()));
+}
+
+
 }

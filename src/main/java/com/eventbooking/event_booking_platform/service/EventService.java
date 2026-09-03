@@ -12,5 +12,6 @@ public interface EventService {
     EventResponseDto getEvent(Long id);
     Page<EventResponseDto> getAllEvents(Pageable pageable);
     EventResponseDto updateEvent(Long id ,EventUpdateRequestDto dto);
+    EventResponseDto reserveSeats(Long id ,Integer seats);
 
 }
