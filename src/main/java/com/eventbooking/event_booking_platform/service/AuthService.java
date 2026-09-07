@@ -7,4 +7,5 @@ public interface AuthService {
     public UserResponseDto addNewUser(RegisterRequestDto dto);
     public UserResponseDto authenticate(LoginRequestDto dto);
     public String login(LoginRequestDto dto);
+    public UserResponseDto checkIfExist();
 }

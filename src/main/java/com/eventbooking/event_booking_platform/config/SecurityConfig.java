@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ORGANIZER", "ADMIN")
+         //       .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.PATCH, "/api/events/**").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/venues").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/events/*/bookings").hasRole("ATTENDEE")
@@ -41,10 +42,8 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
-            http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtService),
-                UsernamePasswordAuthenticationFilter.class
-            );
+            http.addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+            http.addFilterBefore(new CorrelationIdFilter(), JwtAuthenticationFilter.class);
           
         return http.build();
     }

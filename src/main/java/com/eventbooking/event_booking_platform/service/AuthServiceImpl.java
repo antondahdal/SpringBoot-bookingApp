@@ -3,12 +3,14 @@ package com.eventbooking.event_booking_platform.service;
 import com.eventbooking.event_booking_platform.dto.LoginRequestDto;
 import com.eventbooking.event_booking_platform.dto.RegisterRequestDto;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.eventbooking.event_booking_platform.dto.UserResponseDto;
 import com.eventbooking.event_booking_platform.exception.DuplicateException;
 import com.eventbooking.event_booking_platform.exception.InvalidCredentialsException;
+import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Role;
 import com.eventbooking.event_booking_platform.model.User;
 import com.eventbooking.event_booking_platform.repository.UserRepository;
@@ -54,6 +56,15 @@ public class AuthServiceImpl  implements AuthService {
        return jwtService.generateToken(authenticate(dto));
        
     }
+
+    @Override
+    public UserResponseDto checkIfExist() {
+        User user =userRepo.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(()->new ResourceNotFoundException("There is no Such User"));
+      return  new UserResponseDto(user.getId(), user.getEmail(), user.getRole());
+    
+    }
+
+    
     
     
 
