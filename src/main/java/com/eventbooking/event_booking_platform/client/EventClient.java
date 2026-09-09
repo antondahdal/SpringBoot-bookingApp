@@ -1,12 +1,19 @@
 package com.eventbooking.event_booking_platform.client;
 
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
+import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
+import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
+import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 
 @Component
 public class EventClient {
@@ -23,9 +30,29 @@ public class EventClient {
         ServletRequestAttributes attrs =(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         String authHeader = attrs.getRequest().getHeader("Authorization");
         String correlationId = (String) attrs.getRequest().getAttribute("X-Correlation-Id");
-      return  webClient.post().uri("/api/events/{id}/seat-reservations", eventId)
+        EventResponseDto resDto=null;
+        try {
+             resDto=  webClient.post().uri("/api/events/{id}/seat-reservations", eventId)
       .header("Authorization", authHeader)
       .header("X-Correlation-Id", correlationId)
       .bodyValue(dto ).retrieve().bodyToMono(EventResponseDto.class).block();
+            
+        } catch (WebClientResponseException  e) {
+            if(e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)){
+                throw new InsufficientSeatsException ("there is no Seat left");
+            }
+            if(e.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)){
+                throw new ResourceNotFoundException ("there is no Such Event");
+            }
+            if(e.getStatusCode().is5xxServerError()){
+                throw new DownstreamServiceException ("Issue In Server Try Again Later !");
+            }
+
+            throw e;
+            
+        }catch (WebClientRequestException  e){
+            throw new DownstreamServiceException ("Issue In Server Try Again Later !");
+        }
+      return resDto;
     }
 }

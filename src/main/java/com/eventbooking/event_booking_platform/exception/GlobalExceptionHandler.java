@@ -42,6 +42,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    @ExceptionHandler(DownstreamServiceException.class)
+    public ResponseEntity<ProblemDetail> handleDownstream(DownstreamServiceException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_GATEWAY, ex.getMessage());
+        body.setTitle("Downstream failed");
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ProblemDetail> handleStaleWrite(ObjectOptimisticLockingFailureException ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(
