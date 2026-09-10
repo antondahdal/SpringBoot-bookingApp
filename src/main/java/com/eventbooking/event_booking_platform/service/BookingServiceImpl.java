@@ -43,7 +43,7 @@ public class BookingServiceImpl implements BookingService {
          User user =userRepository.findById(resUser.getId()).orElseThrow(()->new ResourceNotFoundException("There is no Such User"));
         Booking bookToSave= new Booking();
        eventClient.reserveSeats(id, dto.getSeats());
-        Event eventToBook=eventRepository.findById(id).orElseThrow(()->new ResourceNotFoundException(" Event not found "));
+        Event eventToBook=eventRepository.getReferenceById(id);
         bookToSave.setEvent(eventToBook);
         bookToSave.setSeats(dto.getSeats());
         bookToSave.setUser(user);
