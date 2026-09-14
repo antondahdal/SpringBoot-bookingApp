@@ -46,11 +46,23 @@ Booking owns inventory. Catalog owns the show. Auth owns identity. That is the m
 
 ## Run
 
+Booking (port **8080**):
+
 ```bash
 ./mvnw spring-boot:run
 ```
 
 Windows: `.\mvnw.cmd spring-boot:run`
+
+Gateway (port **8081**, Book route → Booking):
+
+```bash
+./mvnw -f gateway/pom.xml spring-boot:run
+```
+
+Windows: `.\mvnw.cmd -f gateway/pom.xml spring-boot:run`
+
+Phone Book: `POST http://localhost:8081/api/events/{id}/bookings` (same path as `BookingController`). Browse GET is not on the gateway yet — use **8080**.
 
 ---
 
