@@ -7,6 +7,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.eventbooking.event_booking_platform.dto.UserResponseDto;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @Component 
 public class AuthClient {
     private final WebClient webClient;
@@ -15,7 +17,7 @@ public class AuthClient {
 
         this.webClient=webClient;
     }
-
+    @Retry(name = "eventGet") 
     public UserResponseDto checkIfExist(){
        
         ServletRequestAttributes attrs =(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

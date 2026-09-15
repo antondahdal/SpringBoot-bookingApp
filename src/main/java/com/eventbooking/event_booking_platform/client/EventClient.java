@@ -14,6 +14,7 @@ import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
 import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
 import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 
 @Component
 public class EventClient {
@@ -23,7 +24,8 @@ public class EventClient {
         this.webClient=webClient;
     }
 
-
+    @TimeLimiter(name = "event")
+    
     public EventResponseDto reserveSeats(Long eventId, int seats){
         SeatReservationRequestDto dto = new SeatReservationRequestDto();
         dto.setSeats(seats);

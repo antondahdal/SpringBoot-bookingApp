@@ -1,5 +1,7 @@
 package com.eventbooking.event_booking_platform.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ public class EventServiceImpl implements EventService  {
             saved.getAvailableSeats());
     }
 
+    @Cacheable("events")
     public EventResponseDto getEvent(Long id){
         Event returnedEvent= eventRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Event Not Found "+id));
         return new EventResponseDto(
@@ -86,6 +89,7 @@ public class EventServiceImpl implements EventService  {
 
     @Override
     @Transactional
+    @CacheEvict(value = "events", key = "#id")
     public EventResponseDto reserveSeats(Long id, Integer seats) {
         Event event=eventRepository.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
         if(!checkSeats(event,seats)){
