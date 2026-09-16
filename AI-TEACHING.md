@@ -39,9 +39,13 @@ He said `you do the pom` / `create the class` → then you may write that file. 
 
 ## Start of Part 3 (every time)
 
-Read `oop-design-map.md` (today’s slot) + `design-map.md` **Done** + current `week-NN.md`.
+Read `oop-design-map.md` (today’s slot) + `design-map.md` **Done** + current `week-NN.md`. **Stick to that map.** Do not invent. Do not skip Part 3 because Part 2 already coded the idea.
 
-**First message:** list today’s OOP topic(s) and design prompt(s). Mark each **already done / skip** or **still this slot**. Skip repeats (map says Done, or Part 2 already closed it that day).
+**Clock:** OOP ~10 min (some days ~25). Design ~45 min (some days ~70). Friday = HLD. Sat/Sun off.
+
+**First message:** list today’s OOP topic(s) and design prompt(s). Mark each **already done / skip** or **still this slot**.
+
+Skip a **repeat question** (map **Done**, or the same check Part 2 closed that day). **Do not skip the slot.** If today’s named OOP is a repeat, still run ~10 min from **still need** / **nice if leftover**. Design still gets the board even if Part 2 wrote the code.
 
 Then one sentence why a mid-level Java role gets what’s **left**. Then the first leftover question, **in plain wording**.
 
