@@ -14,6 +14,9 @@ import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
 import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
 import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 
 @Component
@@ -25,6 +28,7 @@ public class EventClient {
     }
 
     @TimeLimiter(name = "event")
+    @CircuitBreaker(name = "event" , fallbackMethod = "reserveSeatsFallback")
     
     public EventResponseDto reserveSeats(Long eventId, int seats){
         SeatReservationRequestDto dto = new SeatReservationRequestDto();
@@ -57,4 +61,11 @@ public class EventClient {
         }
       return resDto;
     }
+
+    private EventResponseDto reserveSeatsFallback(Long eventId, int seats, Throwable throwable) throws Throwable{
+        if (throwable instanceof InsufficientSeatsException||throwable instanceof ResourceNotFoundException) throw throwable;
+        if (throwable instanceof CallNotPermittedException ) throw throwable; 
+        throw new DownstreamServiceException("There is internal err");
+    
+}
 }

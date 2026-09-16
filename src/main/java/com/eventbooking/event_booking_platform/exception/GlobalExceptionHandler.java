@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -56,6 +58,15 @@ public class GlobalExceptionHandler {
             HttpStatus.CONFLICT, "The event was updated by someone else. Retry the booking.");
         body.setTitle("Stale event version");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+
+    @ExceptionHandler(CallNotPermittedException.class)
+    public ResponseEntity<ProblemDetail> handlenoPermit(CallNotPermittedException  ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+            HttpStatus.SERVICE_UNAVAILABLE, "The Server is Nor Available");
+        body.setTitle("Event unavailable");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
     }
 
 }
