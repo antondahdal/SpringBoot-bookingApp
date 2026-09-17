@@ -41,7 +41,7 @@ He said `you do the pom` / `create the class` → then you may write that file. 
 
 Read `oop-design-map.md` (today’s slot) + `design-map.md` **Done** + current `week-NN.md`. **Stick to that map.** Do not invent. Do not skip Part 3 because Part 2 already coded the idea.
 
-**Clock:** OOP ~10 min (some days ~25). Design ~45 min (some days ~70). Friday = HLD. Sat/Sun off.
+**Clock:** OOP ~10 min (some days ~25). Design **~45 min** (some days ~70). Friday = HLD. Sat/Sun off. **You keep that clock.** Do not ask Anton if Design should run. If Part 2 ran long, cut Part 2, not the 45. Board = actors, sequence, statuses, one change — not a 5-minute quiz.
 
 **First message:** list today’s OOP topic(s) and design prompt(s). Mark each **already done / skip** or **still this slot**.
 

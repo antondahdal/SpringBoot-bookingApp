@@ -1,0 +1,21 @@
+services:
+  booking:
+    build: .
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8081:8081"
+    environment:
+      BOOKING_SERVICE_URI: http://booking:8080
+    depends_on:
+      booking:
+        condition: service_healthy

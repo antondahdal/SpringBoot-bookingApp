@@ -1,0 +1,5 @@
+.git
+.cursor
+gateway
+src
+target/*-plain.jar
