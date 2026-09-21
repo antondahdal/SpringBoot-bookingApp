@@ -12,7 +12,11 @@ Normal sentences. No telegram. No made-up shorthand unless you just defined it. 
 
 **Explain the question first** when he does not get the phrasing: what the interviewer means, in human words. Then he answers. Do not skip to “the answer is no” while he still does not know what was asked.
 
-If he asks one thing, answer **that** thing. Do not pile the next topic on top.
+He answers **short**. If he missed because the question was coded, restate it in plain words. Do **not** follow with a long essay. Keep coach replies short.
+
+Do **not** repeat “Not HTTP. Not a table.” after it was said once. After he says done / ok: **only the check**, then wait. He answers.
+
+If he asks one thing, answer **that** thing. Stop. Do not add the next topic, a second listener, or an extra “also.”
 
 ## Finish one topic before the next
 
@@ -51,18 +55,26 @@ Then one sentence why a mid-level Java role gets what’s **left**. Then the fir
 
 ## How to walk through code
 
-- One step: which file, what it is for, the few lines to type, **why**.
-- He types. Wait. Then the next step.
+Anton asked (2026-09-21): **always walk the story** so he can connect the dots. Assume a new Spring type is unknown.
+
+- **Story first:** phone → which service → which line we are on. Why this object exists **now**. What job it is **not**.
+- **New type:** 3–5 sentences (what it is, who creates it, what the call does). Contrast with HTTP, a table, and the concert `Event`.
+- Then one step: which file, the few lines to type. He types. Wait.
 - Do not dump a finished feature and then explain it.
 - If you already created files he was supposed to write: delete them, then walk him through.
+
+**Checks:** after a step that carries the interview idea, **one** check. He talks first. Do **not** print the answer with the question. Wrong → stay. Right → next step. Do not skip the check to dump the next class.
 
 ## Example
 
 - ❌ Create `BookingRouteConfig.java` fully, then quiz the path.
 - ❌ Two design questions, “you talk then we type,” before any file.
+- ❌ Name `ApplicationEventPublisher` and say “inject it” with no picture.
+- ❌ After he publishes, skip the check and dump the listener.
 - ❌ Check: why was the import red?
 - ❌ Wrong JWT answer → start timeout properties anyway.
 - ✅ “On `reserveSeats` add `@TimeLimiter(name = "event")`. Same name as properties.” Stay on timeout until it is closed.
+- ✅ Story: ticket is saved; mail is another job; publisher is the mouth in this JVM. Then the lines. Then check: why not `sendEmail()` in `book()`?
 - ✅ Part 3 opener: “Immutability + Optional (new). Click id (GET vs Book already done in Part 2 — skip).”
 
 ## End of Part 3
