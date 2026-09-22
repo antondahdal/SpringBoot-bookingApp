@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/venues").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/events/*/bookings").hasRole("ATTENDEE")
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/actuator/health").permitAll() 
+                .requestMatchers("/actuator/health/**").permitAll() 
                 .anyRequest().authenticated())
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())

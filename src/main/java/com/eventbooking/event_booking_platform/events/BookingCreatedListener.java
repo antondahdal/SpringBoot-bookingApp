@@ -8,18 +8,21 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
 import com.eventbooking.event_booking_platform.repository.OutboxmessageRepository;
+import com.eventbooking.event_booking_platform.service.BookingNotifier;
 
 @Component 
 public class BookingCreatedListener {
     private final OutboxmessageRepository outboxMessage;
-    public BookingCreatedListener(OutboxmessageRepository outboxMessage) {
+    private final BookingNotifier bookingNotifier;
+    public BookingCreatedListener(OutboxmessageRepository outboxMessage,BookingNotifier bookingNotifier) {
         this.outboxMessage = outboxMessage;
+        this.bookingNotifier=bookingNotifier;
     }
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async 
     public void EventIdPublisher(BookingCreatedEvent  eventId){
 
-       System.out.println(eventId.getId());
+       bookingNotifier.send(eventId.getId());
      upadteTheMessageBox(eventId.getId());
 
     }
