@@ -14,6 +14,9 @@ import com.eventbooking.event_booking_platform.repository.BookingRepository;
 import com.eventbooking.event_booking_platform.repository.EventRepository;
 import com.eventbooking.event_booking_platform.repository.OutboxmessageRepository;
 import com.eventbooking.event_booking_platform.repository.UserRepository;
+
+import io.micrometer.core.instrument.MeterRegistry;
+
 import com.eventbooking.event_booking_platform.client.AuthClient;
 import com.eventbooking.event_booking_platform.client.EventClient;
 import com.eventbooking.event_booking_platform.events.BookingCreatedEvent;
@@ -27,11 +30,12 @@ public class BookingServiceImpl implements BookingService {
     private final   EventClient eventClient;
     private final AuthClient authClient;
     private final OutboxmessageRepository outboxMessage;
+    private final MeterRegistry meterRegistry;
 
     public BookingServiceImpl( BookingRepository bookingRepository,
         UserRepository userRepository,
         EventRepository eventRepository,EventClient eventClient,
-        AuthClient authClient,ApplicationEventPublisher publisher,OutboxmessageRepository outboxMessage){
+        AuthClient authClient,ApplicationEventPublisher publisher,OutboxmessageRepository outboxMessage, MeterRegistry meterRegistry){
             this.bookingRepository=bookingRepository;
             this.userRepository=userRepository;
             this.eventRepository=eventRepository;
@@ -39,6 +43,7 @@ public class BookingServiceImpl implements BookingService {
             this.authClient=authClient;
             this.publisher=publisher;
             this.outboxMessage=outboxMessage;
+            this.meterRegistry=meterRegistry;
 
 
     } 
@@ -54,6 +59,7 @@ public class BookingServiceImpl implements BookingService {
         bookToSave.setSeats(dto.getSeats());
         bookToSave.setUser(user);
        Booking book=bookingRepository.save(bookToSave);
+       meterRegistry.counter("bookings.created").increment();
        populateMessageAndSave( book);
        publisher.publishEvent(new BookingCreatedEvent(book.getId()));
         return new BookingResponseDto(book.getId(),book.getEvent().getId(), book.getUser().getId(),book.getSeats());
