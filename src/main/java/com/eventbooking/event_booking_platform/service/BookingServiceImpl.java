@@ -1,9 +1,12 @@
 package com.eventbooking.event_booking_platform.service;
 
+import java.util.List;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import com.eventbooking.event_booking_platform.dto.BookingCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.BookingResponseDto;
+import com.eventbooking.event_booking_platform.dto.MyBookingResponseDto;
 import com.eventbooking.event_booking_platform.dto.UserResponseDto;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Booking;
@@ -63,6 +66,14 @@ public class BookingServiceImpl implements BookingService {
        populateMessageAndSave( book);
        publisher.publishEvent(new BookingCreatedEvent(book.getId()));
         return new BookingResponseDto(book.getId(),book.getEvent().getId(), book.getUser().getId(),book.getSeats());
+    }
+
+    @Transactional
+    public List<MyBookingResponseDto> myBookings(){
+        UserResponseDto resUser= authClient.checkIfExist();
+        return bookingRepository.findByUserId(resUser.getId()).stream()
+            .map(b -> new MyBookingResponseDto(b.getId(), b.getEvent().getTitle(), b.getSeats()))
+            .toList();
     }
 
 private void populateMessageAndSave(Booking book){
