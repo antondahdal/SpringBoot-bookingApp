@@ -3,6 +3,8 @@ services:
     build: .
     ports:
       - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in your shell}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
