@@ -27,7 +27,6 @@ public class EventClient {
         this.webClient=webClient;
     }
 
-    //@TimeLimiter(name = "event")
     @CircuitBreaker(name = "event" , fallbackMethod = "reserveSeatsFallback")
     
     public EventResponseDto reserveSeats(Long eventId, int seats){
