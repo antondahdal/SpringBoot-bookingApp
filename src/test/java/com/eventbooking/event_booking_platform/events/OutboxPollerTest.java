@@ -37,9 +37,9 @@ class OutboxPollerTest {
         message.setStatus("PENDING");
 
         when(outboxmessageRepository.findByStatus("PENDING")).thenReturn(List.of(message));
-        when(outboxmessageRepository.findByBookingId(42L)).thenReturn(Optional.of(message));
+        when(outboxmessageRepository.findByBookingIdAndType(54,"")).thenReturn(Optional.of(message));
 
-        outboxPoller.checkMail();
+        outboxPoller.poller();
 
         verify(bookingNotifier).send(42L);
         assertEquals("SENT", message.getStatus());

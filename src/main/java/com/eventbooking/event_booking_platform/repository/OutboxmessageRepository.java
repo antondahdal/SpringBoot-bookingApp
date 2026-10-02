@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
+import com.eventbooking.event_booking_platform.model.OutboxType;
 
 /**
  * OutboxmessageRepository
@@ -15,8 +16,8 @@ public interface OutboxmessageRepository extends JpaRepository<OutboxMessage,Lon
 
     
  
-    @Query("SELECT e FROM OutboxMessage e where e.bookingId = :bookingId")
-    Optional<OutboxMessage> findByBookingId(Long bookingId);
+    @Query("SELECT e FROM OutboxMessage e where e.bookingId = :bookingId and e.type = :type" )
+    Optional<OutboxMessage> findByBookingIdAndType(Long bookingId,OutboxType type);
 
     List<OutboxMessage> findByStatus(String Status);
     

@@ -28,7 +28,7 @@ void getEventById_returns200AndBody() throws Exception {
     EventResponseDto dto = new EventResponseDto(
         1L, 10L, "Arena", "Concert",
         LocalDateTime.of(2026, 9, 1, 20, 0),
-        100, 80
+        100, 80,null
     );
     when(eventService.getEvent(1L)).thenReturn(dto);
     mockMvc.perform(get("/api/events/1"))

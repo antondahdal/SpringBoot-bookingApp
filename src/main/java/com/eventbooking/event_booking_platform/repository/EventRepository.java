@@ -26,6 +26,7 @@ Page<Event> findAll(Pageable pageable);
 
 
  @Query("SELECT e FROM Event e where e.id = :id ")
- @Lock(LockModeType.PESSIMISTIC_WRITE)@QueryHints(  @QueryHint( value = "3000", name = "jakarta.persistence.lock.timeout"))
+ @Lock(LockModeType.PESSIMISTIC_WRITE)
+ @QueryHints(  @QueryHint( value = "3000", name = "jakarta.persistence.lock.timeout"))
 Optional<Event> findByIdForUpdate(@Param("id") Long id);
 }

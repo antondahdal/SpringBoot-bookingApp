@@ -13,5 +13,7 @@ public interface EventService {
     Page<EventResponseDto> getAllEvents(Pageable pageable);
     EventResponseDto updateEvent(Long id ,EventUpdateRequestDto dto);
     EventResponseDto reserveSeats(Long id ,Integer seats);
+    void confirmHold(Long id);
+    void expireHold(Long holdId);
 
 }

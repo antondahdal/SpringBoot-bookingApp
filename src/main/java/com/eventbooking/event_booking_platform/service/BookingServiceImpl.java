@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import com.eventbooking.event_booking_platform.dto.BookingCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.BookingResponseDto;
+import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.MyBookingResponseDto;
 import com.eventbooking.event_booking_platform.dto.UserResponseDto;
 import com.eventbooking.event_booking_platform.repository.BookingRepository;
@@ -32,8 +33,8 @@ public class BookingServiceImpl implements BookingService {
     // while waiting on the Auth and Event HTTP calls. Only BookingWriter.writeBook opens one.
     public BookingResponseDto book (BookingCreateRequestDto dto,long id){
         UserResponseDto resUser= authClient.checkIfExist();
-       eventClient.reserveSeats(id, dto.getSeats());
-       return bookingWriter.writeBook(resUser,id, dto.getSeats());
+      EventResponseDto eventRes= eventClient.reserveSeats(id, dto.getSeats());
+       return bookingWriter.writeBook(resUser,id, dto.getSeats(),eventRes.getSeatHoldId());
           }
 
     // Not @Transactional for the same reason as book(). The @EntityGraph finder loads the events in one query.

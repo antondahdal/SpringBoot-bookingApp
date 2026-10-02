@@ -60,13 +60,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-
     @ExceptionHandler(CallNotPermittedException.class)
     public ResponseEntity<ProblemDetail> handlenoPermit(CallNotPermittedException  ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(
             HttpStatus.SERVICE_UNAVAILABLE, "The Server is Nor Available");
         body.setTitle("Event unavailable");
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+
+    @ExceptionHandler(HoldDataExceedTimeException.class)
+    public ResponseEntity<ProblemDetail> handleTimeExceedForHold(ObjectOptimisticLockingFailureException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+            HttpStatus.CONFLICT, "The event is Expired Seats is released.");
+        body.setTitle("event is Expired");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
 }

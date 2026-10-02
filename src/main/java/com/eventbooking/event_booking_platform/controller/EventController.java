@@ -56,5 +56,11 @@ public ResponseEntity<EventResponseDto> reserveSeats(@PathVariable Long id,@Vali
     return ResponseEntity.status(HttpStatus.OK).body(eventService.reserveSeats(id, seats.getSeats()));
 }
 
+@PostMapping("/holds/{holdId}/confirm") 
+public ResponseEntity ConfrimHold(@PathVariable Long holdId){
+eventService.confirmHold(holdId);
+return ResponseEntity.status(HttpStatus.OK).body("Ok");
+}
+
 
 }

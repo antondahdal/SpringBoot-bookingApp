@@ -14,4 +14,5 @@ public class EventResponseDto {
     private  LocalDateTime dateTime;
     private  int totalSeats;
     private  int availableSeats;
+    private Long seatHoldId;
 }

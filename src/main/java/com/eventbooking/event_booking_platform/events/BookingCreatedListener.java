@@ -7,6 +7,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
+import com.eventbooking.event_booking_platform.model.OutboxType;
 import com.eventbooking.event_booking_platform.repository.OutboxmessageRepository;
 import com.eventbooking.event_booking_platform.service.BookingNotifier;
 
@@ -28,7 +29,7 @@ public class BookingCreatedListener {
     }
     
     private  void upadteTheMessageBox(Long id){
-        OutboxMessage outboxMessageTmp=outboxMessage.findByBookingId(id).orElseThrow(()->new ResourceNotFoundException("there isnt Such Message"));
+        OutboxMessage outboxMessageTmp=outboxMessage.findByBookingIdAndType(id,OutboxType.NOTIFY).orElseThrow(()->new ResourceNotFoundException("there isnt Such Message"));
         outboxMessageTmp.setStatus("SENT");
         outboxMessage.save(outboxMessageTmp);
 

@@ -10,6 +10,7 @@ import com.eventbooking.event_booking_platform.exception.ResourceNotFoundExcepti
 import com.eventbooking.event_booking_platform.model.Booking;
 import com.eventbooking.event_booking_platform.model.Event;
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
+import com.eventbooking.event_booking_platform.model.OutboxType;
 import com.eventbooking.event_booking_platform.model.User;
 import com.eventbooking.event_booking_platform.repository.BookingRepository;
 import com.eventbooking.event_booking_platform.repository.EventRepository;
@@ -41,7 +42,7 @@ public class BookingWriter {
     }
 
     @Transactional 
-    public  BookingResponseDto writeBook(UserResponseDto resUser,long id,int seats){
+    public  BookingResponseDto writeBook(UserResponseDto resUser,long id,int seats,long holdaid){
         Booking bookToSave= new Booking();
 
        User user =userRepository.findById(resUser.getId()).orElseThrow(()->new ResourceNotFoundException("User Not Found "));
@@ -52,6 +53,7 @@ public class BookingWriter {
       Booking book=bookingRepository.save(bookToSave);
       meterRegistry.counter("bookings.created").increment();
       populateMessageAndSave( book);
+      populateToConfirm(book,holdaid);
       // Must stay inside this transaction: the listener is AFTER_COMMIT and only fires when there is a commit.
       publisher.publishEvent(new BookingCreatedEvent(book.getId()));
        return new BookingResponseDto(book.getId(),book.getEvent().getId(), book.getUser().getId(),book.getSeats());
@@ -59,6 +61,15 @@ public class BookingWriter {
     }
     private void populateMessageAndSave(Booking book){
         OutboxMessage mess=new OutboxMessage();
+        mess.setType(OutboxType.NOTIFY);
+        mess.setBookingId(book.getId());
+        mess.setStatus("PENDING");
+        outboxMessage.save(mess);
+    }
+    private void populateToConfirm(Booking book,Long holdaid){
+        OutboxMessage mess=new OutboxMessage();
+        mess.setType(OutboxType.CONFIRM_HOLD);
+        mess.setHoldId(holdaid);
         mess.setBookingId(book.getId());
         mess.setStatus("PENDING");
         outboxMessage.save(mess);

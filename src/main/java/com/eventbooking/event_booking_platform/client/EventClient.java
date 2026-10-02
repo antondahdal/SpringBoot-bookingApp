@@ -12,12 +12,12 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
 import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
+import com.eventbooking.event_booking_platform.exception.HoldDataExceedTimeException;
 import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 
 @Component
 public class EventClient {
@@ -65,6 +65,27 @@ public class EventClient {
         if (throwable instanceof InsufficientSeatsException||throwable instanceof ResourceNotFoundException) throw throwable;
         if (throwable instanceof CallNotPermittedException ) throw throwable; 
         throw new DownstreamServiceException("There is internal err");
+    
+}
+
+public void confirmHold(Long holdId){
+
+    try {
+    webClient.post().uri("/api/events/holds/{holdId}/confirm", holdId).retrieve().toBodilessEntity().block();
+    }
+    catch(WebClientResponseException e){
+        if(e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)){
+            throw new HoldDataExceedTimeException ("Faild to Update the Event to Hold ");
+        }
+        if(e.getStatusCode().is5xxServerError()){
+            throw new DownstreamServiceException ("Issue In Server Try Again Later !");
+        }
+
+        throw e;
+        
+    }catch (WebClientRequestException  e){
+        throw new DownstreamServiceException ("Issue In Server Try Again Later !");
+    }
     
 }
 }

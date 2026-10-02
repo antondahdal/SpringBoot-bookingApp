@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/events/**").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/venues").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/events/*/bookings").hasRole("ATTENDEE")
+                .requestMatchers(HttpMethod.POST,"/api/events/holds/*/confirm").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/actuator/health/**").permitAll() 
                 .anyRequest().authenticated())

@@ -1,5 +1,7 @@
 package com.eventbooking.event_booking_platform.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -10,21 +12,29 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eventbooking.event_booking_platform.dto.EventCreateRequestDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.EventUpdateRequestDto;
+import com.eventbooking.event_booking_platform.exception.HoldDataExceedTimeException;
 import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Event;
+import com.eventbooking.event_booking_platform.model.HoldStatus;
+import com.eventbooking.event_booking_platform.model.SeatHold;
 import com.eventbooking.event_booking_platform.model.Venue;
 import com.eventbooking.event_booking_platform.repository.EventRepository;
+import com.eventbooking.event_booking_platform.repository.SeatHoldRepository;
 import com.eventbooking.event_booking_platform.repository.VenueRepository;
 @Service
 public class EventServiceImpl implements EventService  {
     
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
+    private final SeatHoldRepository seatHoldRepository;
 
-    public EventServiceImpl (EventRepository eventRepository,VenueRepository venueRepository){
+    public EventServiceImpl (EventRepository eventRepository,VenueRepository venueRepository,
+        SeatHoldRepository seatHoldRepository
+    ){
         this.eventRepository=eventRepository;
         this.venueRepository=venueRepository;
+        this.seatHoldRepository=seatHoldRepository;
     }
 
     public EventResponseDto createEvent(EventCreateRequestDto dto){
@@ -43,7 +53,7 @@ public class EventServiceImpl implements EventService  {
             saved.getTitle(),
             saved.getDateTime(),
             saved.getTotalSeats(),
-            saved.getAvailableSeats());
+            saved.getAvailableSeats(),null);
     }
 
     @Cacheable("events")
@@ -56,7 +66,7 @@ public class EventServiceImpl implements EventService  {
             returnedEvent.getTitle(),
             returnedEvent.getDateTime(),
             returnedEvent.getTotalSeats(),
-            returnedEvent.getAvailableSeats());
+            returnedEvent.getAvailableSeats(),null);
     }
 
     public Page<EventResponseDto> getAllEvents(Pageable pageable){
@@ -68,7 +78,7 @@ public class EventServiceImpl implements EventService  {
             event.getTitle(),
             event.getDateTime(),
             event.getTotalSeats(),
-            event.getAvailableSeats()
+            event.getAvailableSeats(),null
         ));
     }
 
@@ -84,7 +94,7 @@ public class EventServiceImpl implements EventService  {
         returnedEvent.getTitle(),
         returnedEvent.getDateTime(),
         returnedEvent.getTotalSeats(),
-        returnedEvent.getAvailableSeats());
+        returnedEvent.getAvailableSeats(),null);
     }
 
     @Override
@@ -98,6 +108,12 @@ public class EventServiceImpl implements EventService  {
        }
        event.setAvailableSeats(event.getAvailableSeats()-seats);
        Event returnedEvent=eventRepository.save(event);
+       SeatHold seatHold=new SeatHold();
+       seatHold.setEvent(returnedEvent);
+       seatHold.setSeats(seats);
+       seatHold.setStatus(HoldStatus.HELD);
+       seatHold.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+       SeatHold retSeatHold =seatHoldRepository.save(seatHold);
        return new EventResponseDto(
         returnedEvent.getId(),
         returnedEvent.getVenue().getId(),
@@ -105,7 +121,7 @@ public class EventServiceImpl implements EventService  {
         returnedEvent.getTitle(),
         returnedEvent.getDateTime(),
         returnedEvent.getTotalSeats(),
-        returnedEvent.getAvailableSeats());
+        returnedEvent.getAvailableSeats(),        retSeatHold.getId());
     
     }
 
@@ -113,5 +129,35 @@ public class EventServiceImpl implements EventService  {
         if(event.getAvailableSeats()>=seats) return true;
          return false;
      }
+     @Override 
+     @Transactional 
+     public void confirmHold(Long holdId){
+        SeatHold retSeatHold =seatHoldRepository.findByIdForUpdate(holdId).orElseThrow(()->new ResourceNotFoundException("there is no Hold "));
+        if(HoldStatus.HELD.equals(retSeatHold.getStatus())){
+        
+
+                retSeatHold.setStatus(HoldStatus.CONFIRMED);
+                seatHoldRepository.save(retSeatHold);
+        }
+            if(HoldStatus.EXPIRED.equals(retSeatHold.getStatus())) throw new HoldDataExceedTimeException("Expired Seats");
+
+          
+        }
+
+        @Override 
+        @Transactional  
+        public void expireHold(Long holdId){
+            SeatHold retSeatHold =seatHoldRepository.findByIdForUpdate(holdId).orElseThrow(()->new ResourceNotFoundException("there is no Hold "));
+            if(HoldStatus.HELD.equals(retSeatHold.getStatus())){
+            
+                Event event=eventRepository.findByIdForUpdate(retSeatHold.getEvent().getId()).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
+                event.setAvailableSeats(event.getAvailableSeats()+retSeatHold.getSeats());
+                eventRepository.save(event);
+                retSeatHold.setStatus(HoldStatus.EXPIRED);
+                    seatHoldRepository.save(retSeatHold);
+            }
+        }
+        
+    
 
 }

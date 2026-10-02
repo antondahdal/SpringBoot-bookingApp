@@ -2,6 +2,8 @@ package com.eventbooking.event_booking_platform.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,4 +27,10 @@ public class OutboxMessage {
 
     @Column(nullable = false)
     private String status;
+    @Column(nullable = false)
+    @Enumerated (EnumType.STRING)
+    private OutboxType type;
+    @Column(nullable = true)
+    private Long holdId;
+
 }
