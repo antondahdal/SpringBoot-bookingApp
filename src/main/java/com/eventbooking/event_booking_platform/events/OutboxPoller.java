@@ -12,6 +12,8 @@ import com.eventbooking.event_booking_platform.client.EventClient;
 import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
 import com.eventbooking.event_booking_platform.exception.HoldDataExceedTimeException;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
+import com.eventbooking.event_booking_platform.model.Booking;
+import com.eventbooking.event_booking_platform.model.BookingStatus;
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
 import com.eventbooking.event_booking_platform.model.OutboxType;
 import com.eventbooking.event_booking_platform.repository.BookingRepository;
@@ -54,7 +56,11 @@ catch (DownstreamServiceException e) {
 
 }
 catch(HoldDataExceedTimeException e){
-    
+    Booking book=bookingRepository.findById(message.getBookingId()).orElseThrow();
+    book.setStatus(BookingStatus.CANCELLED);
+    bookingRepository.save(book);
+    upadteTheMessageBox(message.getBookingId(),message.getType());
+
 
 }
     }

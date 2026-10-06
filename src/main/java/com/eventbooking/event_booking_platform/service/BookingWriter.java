@@ -8,6 +8,7 @@ import com.eventbooking.event_booking_platform.dto.UserResponseDto;
 import com.eventbooking.event_booking_platform.events.BookingCreatedEvent;
 import com.eventbooking.event_booking_platform.exception.ResourceNotFoundException;
 import com.eventbooking.event_booking_platform.model.Booking;
+import com.eventbooking.event_booking_platform.model.BookingStatus;
 import com.eventbooking.event_booking_platform.model.Event;
 import com.eventbooking.event_booking_platform.model.OutboxMessage;
 import com.eventbooking.event_booking_platform.model.OutboxType;
@@ -50,6 +51,7 @@ public class BookingWriter {
        bookToSave.setEvent(eventToBook);
        bookToSave.setSeats(seats);
       bookToSave.setUser(user);
+      bookToSave.setStatus(BookingStatus.CONFIRMED);
       Booking book=bookingRepository.save(bookToSave);
       meterRegistry.counter("bookings.created").increment();
       populateMessageAndSave( book);
