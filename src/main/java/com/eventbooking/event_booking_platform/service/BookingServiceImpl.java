@@ -34,14 +34,14 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto book (BookingCreateRequestDto dto,long id){
         UserResponseDto resUser= authClient.checkIfExist();
       EventResponseDto eventRes= eventClient.reserveSeats(id, dto.getSeats());
-       return bookingWriter.writeBook(resUser,id, dto.getSeats(),eventRes.getSeatHoldId());
+       return bookingWriter.writeBook(resUser, dto.getSeats(),eventRes);
           }
 
-    // Not @Transactional for the same reason as book(). The @EntityGraph finder loads the events in one query.
+    // Not @Transactional for the same reason as book(). 
     public List<MyBookingResponseDto> myBookings(){
         UserResponseDto resUser= authClient.checkIfExist();
         return bookingRepository.findByUserId(resUser.getId()).stream()
-            .map(b -> new MyBookingResponseDto(b.getId(), b.getEvent().getTitle(), b.getSeats()))
+            .map(b -> new MyBookingResponseDto(b.getId(), b.getEventTitle(), b.getSeats()))
             .toList();
     }
 
