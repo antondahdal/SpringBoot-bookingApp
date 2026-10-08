@@ -1,5 +1,6 @@
 package com.eventbooking.event_booking_platform.client;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -13,7 +14,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 public class AuthClient {
     private final WebClient webClient;
 
-    public  AuthClient(WebClient webClient){
+    public  AuthClient(@Qualifier("authWebClient") WebClient webClient){
 
         this.webClient=webClient;
     }

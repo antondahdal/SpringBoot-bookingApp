@@ -12,12 +12,21 @@ import reactor.netty.http.client.HttpClient;
 
 @Configuration
 public class WebClientConfig {
-    
+
     @Bean
-    public WebClient getWebClient(@Value("${event.service.base-url}") String url){
-        Duration dur=Duration.ofSeconds(3);
-        HttpClient plugin=HttpClient.create().responseTimeout(dur);
-        ReactorClientHttpConnector plug=new ReactorClientHttpConnector(plugin);
+    public WebClient authWebClient(@Value("${auth.service.base-url}") String url) {
+        return client(url);
+    }
+
+    @Bean
+    public WebClient eventWebClient(@Value("${event.service.base-url}") String url) {
+        return client(url);
+    }
+
+    private WebClient client(String url) {
+        Duration dur = Duration.ofSeconds(3);
+        HttpClient plugin = HttpClient.create().responseTimeout(dur);
+        ReactorClientHttpConnector plug = new ReactorClientHttpConnector(plugin);
         return WebClient.builder().baseUrl(url).clientConnector(plug).build();
     }
 }

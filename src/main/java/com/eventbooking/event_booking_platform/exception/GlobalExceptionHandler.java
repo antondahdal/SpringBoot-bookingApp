@@ -20,22 +20,6 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(DuplicateException.class)
-    public ResponseEntity<ProblemDetail> handleDuplicate(DuplicateException ex){
-        ProblemDetail body = ProblemDetail.forStatusAndDetail(
-            HttpStatus.CONFLICT, ex.getMessage());
-        body.setTitle("Duplicate Entity");
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ProblemDetail> invalidCredintals(InvalidCredentialsException ex){
-        ProblemDetail body = ProblemDetail.forStatusAndDetail(
-            HttpStatus.UNAUTHORIZED, ex.getMessage());
-        body.setTitle("Invalid Credintals");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
-    }
-
     @ExceptionHandler(InsufficientSeatsException .class)
     public ResponseEntity<ProblemDetail> insufficientSeatsException (InsufficientSeatsException  ex){
         ProblemDetail body = ProblemDetail.forStatusAndDetail(

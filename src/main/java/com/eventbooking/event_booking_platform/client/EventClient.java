@@ -1,6 +1,8 @@
 package com.eventbooking.event_booking_platform.client;
 
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -23,8 +25,12 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 public class EventClient {
     
     private final WebClient webClient;
-    public EventClient(WebClient webClient){
+    private final String internalToken;
+
+    public EventClient(@Qualifier("eventWebClient") WebClient webClient,
+            @Value("${app.internal.token}") String internalToken){
         this.webClient=webClient;
+        this.internalToken=internalToken;
     }
 
     @CircuitBreaker(name = "event" , fallbackMethod = "reserveSeatsFallback")
@@ -71,7 +77,9 @@ public class EventClient {
 public void confirmHold(Long holdId){
 
     try {
-    webClient.post().uri("/api/events/holds/{holdId}/confirm", holdId).retrieve().toBodilessEntity().block();
+    webClient.post().uri("/api/events/holds/{holdId}/confirm", holdId)
+        .header("X-Internal-Token", internalToken)
+        .retrieve().toBodilessEntity().block();
     }
     catch(WebClientResponseException e){
         if(e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)){
