@@ -58,7 +58,7 @@ public class EventServiceImpl implements EventService  {
 
     @Cacheable("events")
     public EventResponseDto getEvent(Long id){
-        Event returnedEvent= eventRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Event Not Found "+id));
+        Event returnedEvent= eventRepository.findByIdAndVenueId(id).orElseThrow(()->new ResourceNotFoundException("Event Not Found "+id));
         return new EventResponseDto(
             returnedEvent.getId(),
             returnedEvent.getVenue().getId(),
@@ -83,18 +83,18 @@ public class EventServiceImpl implements EventService  {
     }
 
     @Override
+    @Transactional
     public EventResponseDto updateEvent(Long id, EventUpdateRequestDto dto) {
         Event event =eventRepository.findById(id).orElseThrow(()->  new ResourceNotFoundException("there is no Such Event "));
        event.setTitle(dto.getTitle());
-      Event returnedEvent= eventRepository.save(event);
        return new EventResponseDto(
-        returnedEvent.getId(),
-        returnedEvent.getVenue().getId(),
-        returnedEvent.getVenue().getName(),
-        returnedEvent.getTitle(),
-        returnedEvent.getDateTime(),
-        returnedEvent.getTotalSeats(),
-        returnedEvent.getAvailableSeats(),null);
+        event.getId(),
+        event.getVenue().getId(),
+        event.getVenue().getName(),
+        event.getTitle(),
+        event.getDateTime(),
+        event.getTotalSeats(),
+        event.getAvailableSeats(),null);
     }
 
     @Override

@@ -21,6 +21,10 @@ public interface  EventRepository extends JpaRepository<Event,Long> {
     @Query("SELECT e FROM Event e JOIN FETCH e.venue")
 List<Event> findAllWithVenue();
 
+@Query("SELECT e FROM Event e JOIN FETCH e.venue WHERE e.id = :id")
+Optional<Event> findByIdAndVenueId(@Param("id") Long id);
+
+
 @EntityGraph(attributePaths = "venue")
 Page<Event> findAll(Pageable pageable);
 
