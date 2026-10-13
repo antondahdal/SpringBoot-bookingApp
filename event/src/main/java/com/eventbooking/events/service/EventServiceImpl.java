@@ -1,10 +1,15 @@
 package com.eventbooking.events.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +62,7 @@ public class EventServiceImpl implements EventService  {
     }
 
     @Cacheable("events")
+    @Transactional(readOnly = true)
     public EventResponseDto getEvent(Long id){
         Event returnedEvent= eventRepository.findByIdAndVenueId(id).orElseThrow(()->new ResourceNotFoundException("Event Not Found "+id));
         return new EventResponseDto(
@@ -69,17 +75,27 @@ public class EventServiceImpl implements EventService  {
             returnedEvent.getAvailableSeats(),null);
     }
 
+    @Transactional(readOnly = true)
     public Page<EventResponseDto> getAllEvents(Pageable pageable){
-        return  eventRepository.findAll(pageable)
-        .map( event -> new EventResponseDto(
-            event.getId(),
-            event.getVenue().getId(),
-            event.getVenue().getName(),
-            event.getTitle(),
-            event.getDateTime(),
-            event.getTotalSeats(),
-            event.getAvailableSeats(),null
-        ));
+        Page<Long> ids = eventRepository.findIds(pageable);
+        if (ids.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, ids.getTotalElements());
+        }
+        Map<Long, Event> byId = eventRepository.findWithVenueByIdIn(ids.getContent()).stream()
+            .collect(Collectors.toMap(Event::getId, Function.identity()));
+        List<EventResponseDto> content = ids.getContent().stream()
+            .map(byId::get)
+            .map(event -> new EventResponseDto(
+                event.getId(),
+                event.getVenue().getId(),
+                event.getVenue().getName(),
+                event.getTitle(),
+                event.getDateTime(),
+                event.getTotalSeats(),
+                event.getAvailableSeats(),
+                null))
+            .toList();
+        return new PageImpl<>(content, pageable, ids.getTotalElements());
     }
 
     @Override

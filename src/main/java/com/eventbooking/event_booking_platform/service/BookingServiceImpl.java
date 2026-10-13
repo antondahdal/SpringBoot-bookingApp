@@ -8,19 +8,16 @@ import com.eventbooking.event_booking_platform.dto.BookingResponseDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.MyBookingResponseDto;
 import com.eventbooking.event_booking_platform.dto.UserResponseDto;
-import com.eventbooking.event_booking_platform.repository.BookingRepository;
 import com.eventbooking.event_booking_platform.client.AuthClient;
 import com.eventbooking.event_booking_platform.client.EventClient;
 @Service
 public class BookingServiceImpl implements BookingService {
-    private final BookingRepository bookingRepository;
     private final   EventClient eventClient;
     private final AuthClient authClient;
     private final BookingWriter bookingWriter;
    
 
-    public BookingServiceImpl(BookingRepository bookingRepository,EventClient eventClient,AuthClient authClient,BookingWriter bookingWriter){
-            this.bookingRepository=bookingRepository;
+    public BookingServiceImpl(EventClient eventClient,AuthClient authClient,BookingWriter bookingWriter){
             this.eventClient=eventClient;
             this.authClient=authClient;
             this.bookingWriter=bookingWriter;
@@ -40,7 +37,7 @@ public class BookingServiceImpl implements BookingService {
     // Not @Transactional for the same reason as book(). 
     public List<MyBookingResponseDto> myBookings(){
         UserResponseDto resUser= authClient.checkIfExist();
-        return bookingRepository.findByUserId(resUser.getId()).stream()
+        return bookingWriter.findByUserId(resUser.getId()).stream()
             .map(b -> new MyBookingResponseDto(b.getId(), b.getEventTitle(), b.getSeats()))
             .toList();
     }

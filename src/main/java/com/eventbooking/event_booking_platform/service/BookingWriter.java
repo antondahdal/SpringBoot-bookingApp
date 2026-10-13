@@ -1,7 +1,11 @@
 package com.eventbooking.event_booking_platform.service;
 
+import java.util.List;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.eventbooking.event_booking_platform.dto.BookingResponseDto;
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
@@ -15,7 +19,6 @@ import com.eventbooking.event_booking_platform.repository.BookingRepository;
 import com.eventbooking.event_booking_platform.repository.OutboxmessageRepository;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.transaction.Transactional;
 
 // Separate bean on purpose: @Transactional only runs through Spring's proxy, so a call from
 // another method inside BookingServiceImpl (self-invocation) would get no transaction.
@@ -36,7 +39,7 @@ public class BookingWriter {
         this.publisher=publisher;
     }
 
-    @Transactional 
+    @Transactional(propagation = Propagation.REQUIRED)
     public  BookingResponseDto writeBook(UserResponseDto resUser,int seats, EventResponseDto eventRes){
         Booking bookToSave= new Booking();
 
@@ -69,6 +72,9 @@ public class BookingWriter {
         mess.setStatus("PENDING");
         outboxMessage.save(mess);
     }
-       
-    
+
+    @Transactional(readOnly = true)
+    public List<Booking> findByUserId(Long userId) {
+        return bookingRepository.findByUserId(userId);
+    }
 }

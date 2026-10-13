@@ -1,10 +1,10 @@
 package com.eventbooking.events.repository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -25,8 +25,11 @@ List<Event> findAllWithVenue();
 Optional<Event> findByIdAndVenueId(@Param("id") Long id);
 
 
-@EntityGraph(attributePaths = "venue")
-Page<Event> findAll(Pageable pageable);
+@Query("SELECT e.id FROM Event e")
+Page<Long> findIds(Pageable pageable);
+
+@Query("SELECT e FROM Event e JOIN FETCH e.venue WHERE e.id IN :ids")
+List<Event> findWithVenueByIdIn(@Param("ids") Collection<Long> ids);
 
 
  @Query("SELECT e FROM Event e where e.id = :id ")
