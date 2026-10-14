@@ -1,6 +1,7 @@
 services:
   auth:
     build: ./auth
+    mem_limit: 512m
     ports:
       - "8082:8082"
     environment:
@@ -14,6 +15,7 @@ services:
 
   event:
     build: ./event
+    mem_limit: 512m
     ports:
       - "8083:8083"
     environment:
@@ -28,6 +30,7 @@ services:
 
   booking:
     build: .
+    mem_limit: 512m
     ports:
       - "8080:8080"
     environment:
@@ -49,6 +52,7 @@ services:
 
   gateway:
     build: ./gateway
+    mem_limit: 512m
     ports:
       - "8081:8081"
     environment:

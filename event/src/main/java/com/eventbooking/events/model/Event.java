@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
@@ -24,7 +25,10 @@ import lombok.Setter;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //SEQUENCE is added only to Do Batch Example not needed in Real life
+
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "event_seq")
+    @SequenceGenerator (name = "event_seq", allocationSize = 20)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -46,4 +50,5 @@ public class Event {
     @Column
     @Version
     private long version;
+   
 }
