@@ -1,0 +1,37 @@
+# A ConfigMap is a Kubernetes object full of plain settings.
+# It does not run a pod. The Deployment has to pull it into the container.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Event's Deployment will load this by this name.
+  name: event-config
+data:
+  # Spring reads SPRING_DATASOURCE_URL as spring.datasource.url.
+  # This is the database address, not the JWT key.
+  SPRING_DATASOURCE_URL: jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: booking-config
+data:
+  # Booking's own database address. Plain setting, same idea as Event.
+  SPRING_DATASOURCE_URL: jdbc:h2:mem:bookingdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  # Hostnames are the Service names, not pod IPs.
+  AUTH_SERVICE_BASE_URL: http://auth:8082
+  EVENT_SERVICE_BASE_URL: http://event:8083
+---
+# A Secret is the object for a key. It is not a ConfigMap.
+apiVersion: v1
+kind: Secret
+metadata:
+  # Both Deployments load this same Secret by this name.
+  name: app-secret
+# stringData is plain text in this file so you can read it.
+# Kubernetes stores it base64. Base64 is encoding, not encryption.
+# The real key stays out of git. These two values are placeholders.
+stringData:
+  # Event and Booking already read this env name: ${JWT_SECRET}.
+  JWT_SECRET: replace-me
+  # Both apps already read ${APP_INTERNAL_TOKEN}.
+  APP_INTERNAL_TOKEN: replace-me

@@ -1,0 +1,25 @@
+# autoscaling/v2 is the API group that knows how to change a Deployment's replica count.
+apiVersion: autoscaling/v2
+# HPA means Horizontal Pod Autoscaler. Horizontal means more pods, not a bigger pod.
+# It does not run Java. It edits replicas on the Event Deployment.
+kind: HorizontalPodAutoscaler
+metadata:
+  name: event
+spec:
+  scaleTargetRef:
+    # Which object to scale. The Deployment named event in k8s/event.yaml.
+    apiVersion: apps/v1
+    kind: Deployment
+    name: event
+  # Never go below one pod, never above three, no matter the CPU.
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        # Scale on CPU, not on memory, and not on how many seats are left.
+        name: cpu
+        target:
+          # 70% of the cpu request on the pod (100m). Used CPU / 100m.
+          type: Utilization
+          averageUtilization: 70

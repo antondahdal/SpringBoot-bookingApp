@@ -1,0 +1,75 @@
+# Same two objects as k8s/event.yaml. This file is Booking, not Event.
+apiVersion: apps/v1
+# Keeps Booking pods running and replaces one when it dies.
+kind: Deployment
+metadata:
+  # Cluster name of this rule. Not the Service callers use by itself.
+  name: booking
+  labels:
+    app: booking
+spec:
+  replicas: 1
+  # Same swap as Event. Old pod stays until the new one passes readiness.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      # This Deployment owns pods labeled app: booking.
+      app: booking
+  template:
+    metadata:
+      labels:
+        # Sticker on the pod. Selector and Service both match this.
+        app: booking
+    spec:
+      containers:
+        - name: booking
+          # Image from the root Dockerfile (JRE + event-booking-platform jar).
+          image: event-booking-platform:0.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            # Booking listens here. Same as server.port for this app.
+            - containerPort: 8080
+          # Same idea as Event. This pod loads Booking's plain settings and the shared key.
+          envFrom:
+            - configMapRef:
+                name: booking-config
+            - secretRef:
+                name: app-secret
+          # Same two probes as Event. Port is Booking's 8080.
+          # Liveness kills the pod. Readiness only takes it out of the Service.
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          # Same memory numbers as Event. 256 reserved, 512 cap.
+          resources:
+            requests:
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Callers use this name: http://booking:8080
+  # Gateway in Compose already used the hostname booking.
+  name: booking
+spec:
+  selector:
+    # Follows pods labeled app: booking when a pod is replaced.
+    app: booking
+  ports:
+    - port: 8080
+      targetPort: 8080

@@ -1,0 +1,102 @@
+# apps/v1 is the Kubernetes API group that knows how to run a Deployment.
+apiVersion: apps/v1
+# Deployment means "keep this many copies of Event running."
+# It is not an HTTP call, not the events table, and not the concert class Event.
+kind: Deployment
+metadata:
+  # Name of this rule inside the cluster. kubectl and other files use this name.
+  name: event
+  labels:
+    # A sticker on the Deployment object itself. The Service does not use this sticker.
+    app: event
+spec:
+  # How many Event pods to keep alive. One for this lab.
+  replicas: 1
+  # A new image must not kill every pod first. Start the new one, then drop the old one.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Do not take the last ready pod away before the new one is ready.
+      maxUnavailable: 0
+      # One extra pod may exist during the swap. With replicas 1, that is briefly 2 pods.
+      maxSurge: 1
+  selector:
+    matchLabels:
+      # This Deployment owns only pods that wear app: event.
+      # The same sticker must appear on the pod template below, or the Deployment refuses to start.
+      app: event
+  template:
+    # The recipe for one pod. A new pod is built from here when the old one dies.
+    metadata:
+      labels:
+        # Sticker on the pod. The selector above and the Service below both look for this.
+        app: event
+    spec:
+      containers:
+        - name: event
+          # The Event image from the second stage of event/Dockerfile (JRE + jar, not Maven).
+          image: event-booking-event:0.0.1
+          # Use a local image if it is already on the machine. Do not pull from a registry yet.
+          imagePullPolicy: IfNotPresent
+          ports:
+            # The process inside the container listens here. Same as server.port in Event.
+            # This line does not open the port on your laptop. The Service does the cluster address.
+            - containerPort: 8083
+          # Pull every key of these objects in as environment variables.
+          # Without this block the ConfigMap and Secret exist, and the pod never sees them.
+          envFrom:
+            - configMapRef:
+                # Plain settings from k8s/config.yaml. The database URL is here.
+                name: event-config
+            - secretRef:
+                # The JWT key and the internal token. Not in the ConfigMap.
+                name: app-secret
+          # Liveness: is this process up? Failure means Kubernetes kills the pod.
+          # The Deployment then starts a new one. Do not point this at the database.
+          # A database blip would restart every Event pod, including ones mid-lock.
+          livenessProbe:
+            httpGet:
+              # Actuator's liveness group. Not /actuator/health, which also checks the DB.
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 40
+            periodSeconds: 10
+          # Readiness: should the Service send traffic here?
+          # Failure removes this pod from the Service. The pod stays. It is not replaced.
+          # The database check belongs on this side.
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          # requests: memory the scheduler reserves for this pod on a node.
+          # limits: the hard cap. Same 512 idea as mem_limit in Compose.
+          # The Dockerfile's MaxRAMPercentage=75 is 75% of this limit, not of the laptop.
+          resources:
+            requests:
+              memory: 256Mi
+              # HPA compares used CPU to this request. Without it, a CPU percentage has no base.
+              cpu: 100m
+            limits:
+              memory: 512Mi
+---
+# v1 is the core API group. A Service lives here, not under apps/v1.
+apiVersion: v1
+# Service means "a steady name and port that forwards to matching pods."
+# It does not run Java.
+kind: Service
+metadata:
+  # Other boxes call this name: http://event:8083
+  # Same hostname Compose already used for the event service.
+  name: event
+spec:
+  selector:
+    # Send traffic only to pods wearing app: event.
+    # When a pod is replaced it gets a new IP. This selector follows the sticker, so the name event still works.
+    app: event
+  ports:
+    # port is the port callers use on the Service name.
+    # targetPort is the containerPort on the pod (8083).
+    - port: 8083
+      targetPort: 8083
