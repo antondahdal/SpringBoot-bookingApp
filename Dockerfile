@@ -12,9 +12,9 @@ COPY --from=build /app/target/event-booking-platform-0.0.1-SNAPSHOT.jar app.jar
 RUN useradd -r -u 1001 app \
     && printf '%s\n' \
       '#!/bin/sh' \
-      'if [ -n "$PORT" ]; then export SERVER_PORT="$PORT"; fi' \
       'if [ -z "$JAVA_OPTS" ]; then JAVA_OPTS="-XX:MaxRAMPercentage=75.0"; fi' \
-      'exec java $JAVA_OPTS -jar app.jar' \
+      'if [ -n "$PORT" ]; then export SERVER_PORT="$PORT"; fi' \
+      'exec java $JAVA_OPTS -Dserver.address=0.0.0.0 ${SERVER_PORT:+-Dserver.port=$SERVER_PORT} -jar app.jar' \
       > /entrypoint.sh && chmod 755 /entrypoint.sh
 USER app
 EXPOSE 8080
