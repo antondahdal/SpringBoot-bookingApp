@@ -23,7 +23,7 @@ services:
     healthCheckPath: /actuator/health
     envVars:
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=50.0"
+        value: "-XX:MaxRAMPercentage=70.0 -XX:TieredStopAtLevel=1 -XX:+UseSerialGC"
       - key: JWT_SECRET
         generateValue: true
       - key: APP_CORS_ORIGINS
@@ -43,7 +43,7 @@ services:
     healthCheckPath: /actuator/health
     envVars:
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=50.0"
+        value: "-XX:MaxRAMPercentage=70.0 -XX:TieredStopAtLevel=1 -XX:+UseSerialGC"
       - key: JWT_SECRET
         fromService:
           name: event-booking-auth
@@ -68,7 +68,7 @@ services:
     healthCheckPath: /actuator/health
     envVars:
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=50.0"
+        value: "-XX:MaxRAMPercentage=70.0 -XX:TieredStopAtLevel=1 -XX:+UseSerialGC"
       - key: JWT_SECRET
         fromService:
           name: event-booking-auth
@@ -106,7 +106,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=50.0"
+        value: "-XX:MaxRAMPercentage=70.0 -XX:TieredStopAtLevel=1 -XX:+UseSerialGC"
       - key: APP_CORS_ORIGINS
         value: https://antondahdal.github.io
       - key: REDIS_URL
