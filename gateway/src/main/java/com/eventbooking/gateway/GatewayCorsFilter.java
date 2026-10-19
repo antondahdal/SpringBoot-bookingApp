@@ -14,6 +14,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 // The browser talks only to the gateway. A 429 from the gate must carry the
 // same CORS headers as a proxied call, or the page hides the status.
@@ -42,6 +43,34 @@ public class GatewayCorsFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-        chain.doFilter(request, response);
+        chain.doFilter(request, new StripDownstreamCors(response));
+    }
+
+    // Auth, Event, and Booking also write CORS. The proxy would forward those
+    // headers next to the ones this filter already set, and the browser then
+    // hides the response.
+    private static final class StripDownstreamCors extends HttpServletResponseWrapper {
+
+        StripDownstreamCors(HttpServletResponse response) {
+            super(response);
+        }
+
+        @Override
+        public void setHeader(String name, String value) {
+            if (!isCors(name)) {
+                super.setHeader(name, value);
+            }
+        }
+
+        @Override
+        public void addHeader(String name, String value) {
+            if (!isCors(name)) {
+                super.addHeader(name, value);
+            }
+        }
+
+        private static boolean isCors(String name) {
+            return name != null && name.regionMatches(true, 0, "Access-Control-", 0, "Access-Control-".length());
+        }
     }
 }
