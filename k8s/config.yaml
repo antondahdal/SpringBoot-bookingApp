@@ -8,7 +8,9 @@ metadata:
 data:
   # Spring reads SPRING_DATASOURCE_URL as spring.datasource.url.
   # This is the database address, not the JWT key.
-  SPRING_DATASOURCE_URL: jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eventdb
+  SPRING_DATASOURCE_USERNAME: booking
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -16,7 +18,9 @@ metadata:
   name: booking-config
 data:
   # Booking's own database address. Plain setting, same idea as Event.
-  SPRING_DATASOURCE_URL: jdbc:h2:mem:bookingdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bookingdb
+  SPRING_DATASOURCE_USERNAME: booking
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
   # Hostnames are the Service names, not pod IPs.
   AUTH_SERVICE_BASE_URL: http://auth:8082
   EVENT_SERVICE_BASE_URL: http://event:8083
@@ -35,3 +39,5 @@ stringData:
   JWT_SECRET: replace-me
   # Both apps already read ${APP_INTERNAL_TOKEN}.
   APP_INTERNAL_TOKEN: replace-me
+  # Password for the Postgres user named in the ConfigMaps. Placeholder, same as Compose's local default.
+  SPRING_DATASOURCE_PASSWORD: booking

@@ -9,7 +9,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/target/event-booking-platform-0.0.1-SNAPSHOT.jar app.jar
-RUN useradd -r -u 1001 app
+RUN useradd -r -u 1001 app \
+    && printf '%s\n' \
+      '#!/bin/sh' \
+      'if [ -n "$PORT" ]; then export SERVER_PORT="$PORT"; fi' \
+      'if [ -z "$JAVA_OPTS" ]; then JAVA_OPTS="-XX:MaxRAMPercentage=75.0"; fi' \
+      'exec java $JAVA_OPTS -jar app.jar' \
+      > /entrypoint.sh && chmod 755 /entrypoint.sh
 USER app
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+ENTRYPOINT ["/entrypoint.sh"]

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eventbooking.events.dto.EventCreateRequestDto;
 import com.eventbooking.events.dto.EventResponseDto;
 import com.eventbooking.events.dto.EventUpdateRequestDto;
+import com.eventbooking.events.exception.ClickIdMismatchException;
 import com.eventbooking.events.exception.HoldDataExceedTimeException;
 import com.eventbooking.events.exception.InsufficientSeatsException;
 import com.eventbooking.events.exception.ResourceNotFoundException;
@@ -116,8 +118,16 @@ public class EventServiceImpl implements EventService  {
     @Override
     @Transactional
     @CacheEvict(value = "events", key = "#id")
-    public EventResponseDto reserveSeats(Long id, Integer seats) {
+    public EventResponseDto reserveSeats(Long id, Integer seats, String clickId) {
         Event event=eventRepository.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("There is no Such Event"));
+        // The row lock orders two retries of the same tap. The second one sees the hold the first one saved.
+        SeatHold existing = seatHoldRepository.findByClickId(clickId).orElse(null);
+        if (existing != null) {
+            if (!existing.getEvent().getId().equals(id) || existing.getSeats() != seats) {
+                throw new ClickIdMismatchException("This click id was already used for a different book.");
+            }
+            return toResponse(event, existing.getId());
+        }
         if(!checkSeats(event,seats)){
           
             throw new InsufficientSeatsException("there is no Enough Seats");
@@ -127,18 +137,27 @@ public class EventServiceImpl implements EventService  {
        SeatHold seatHold=new SeatHold();
        seatHold.setEvent(returnedEvent);
        seatHold.setSeats(seats);
+       seatHold.setClickId(clickId);
        seatHold.setStatus(HoldStatus.HELD);
        seatHold.setExpiresAt(LocalDateTime.now().plusMinutes(10));
-       SeatHold retSeatHold =seatHoldRepository.save(seatHold);
-       return new EventResponseDto(
-        returnedEvent.getId(),
-        returnedEvent.getVenue().getId(),
-        returnedEvent.getVenue().getName(),
-        returnedEvent.getTitle(),
-        returnedEvent.getDateTime(),
-        returnedEvent.getTotalSeats(),
-        returnedEvent.getAvailableSeats(),        retSeatHold.getId());
-    
+       try {
+           SeatHold retSeatHold = seatHoldRepository.saveAndFlush(seatHold);
+           return toResponse(returnedEvent, retSeatHold.getId());
+       } catch (DataIntegrityViolationException ex) {
+           throw new ClickIdMismatchException("This click id was already used for a different book.");
+       }
+    }
+
+    private EventResponseDto toResponse(Event event, Long holdId) {
+        return new EventResponseDto(
+            event.getId(),
+            event.getVenue().getId(),
+            event.getVenue().getName(),
+            event.getTitle(),
+            event.getDateTime(),
+            event.getTotalSeats(),
+            event.getAvailableSeats(),
+            holdId);
     }
 
     public boolean checkSeats(Event event,int seats){

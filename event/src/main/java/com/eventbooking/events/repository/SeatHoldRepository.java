@@ -19,6 +19,8 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
     @Lock (LockModeType.PESSIMISTIC_WRITE)
     Optional<SeatHold> findByIdForUpdate(Long id);
 
-    List<SeatHold> findByStatusAndExpiresAtBefore (HoldStatus status, LocalDateTime expireyDate); 
+    List<SeatHold> findByStatusAndExpiresAtBefore (HoldStatus status, LocalDateTime expireyDate);
+
+    Optional<SeatHold> findByClickId(String clickId);
 
 }

@@ -33,4 +33,6 @@ public class Booking {
     BookingStatus status;    
     @Column(nullable = false)
     private String eventTitle;
+    @Column(nullable = false, unique = true, length = 64)
+    private String clickId;
 }

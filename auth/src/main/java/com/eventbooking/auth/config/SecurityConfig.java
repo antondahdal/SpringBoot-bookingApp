@@ -1,7 +1,9 @@
 package com.eventbooking.auth.config;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -20,9 +22,12 @@ import com.eventbooking.auth.security.JwtService;
 public class SecurityConfig {
 
 	private final JwtService jwtService;
+	private final List<String> allowedOrigins;
 
-	public SecurityConfig(JwtService jwtService) {
+	public SecurityConfig(JwtService jwtService,
+			@Value("${app.cors.allowed-origins:http://localhost:3000}") String allowedOrigins) {
 		this.jwtService = jwtService;
+		this.allowedOrigins = Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
 	}
 
 	@Bean
@@ -50,7 +55,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOrigins(List.of("http://localhost:3000"));
+		config.setAllowedOrigins(allowedOrigins);
 		config.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS"));
 		config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id"));
 		config.setExposedHeaders(List.of("X-Correlation-Id"));

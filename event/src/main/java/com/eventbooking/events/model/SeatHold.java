@@ -37,4 +37,6 @@ public class SeatHold {
     private HoldStatus status;
     @Column(nullable = false)
     private LocalDateTime expiresAt;
+    @Column(nullable = false, unique = true, length = 64)
+    private String clickId;
 }

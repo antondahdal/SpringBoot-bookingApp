@@ -53,7 +53,7 @@ public ResponseEntity<EventResponseDto> updateName(@PathVariable Long id ,@Valid
     
 @PostMapping("/{id}/seat-reservations")
 public ResponseEntity<EventResponseDto> reserveSeats(@PathVariable Long id,@Valid @RequestBody SeatReservationRequestDto  seats ){
-    return ResponseEntity.status(HttpStatus.OK).body(eventService.reserveSeats(id, seats.getSeats()));
+    return ResponseEntity.status(HttpStatus.OK).body(eventService.reserveSeats(id, seats.getSeats(), seats.getClickId()));
 }
 
 @PostMapping("/holds/{holdId}/confirm") 

@@ -20,6 +20,14 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(ClickIdMismatchException.class)
+    public ResponseEntity<ProblemDetail> clickIdMismatch(ClickIdMismatchException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+            HttpStatus.CONFLICT, ex.getMessage());
+        body.setTitle("Click id already used");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(InsufficientSeatsException .class)
     public ResponseEntity<ProblemDetail> insufficientSeatsException (InsufficientSeatsException  ex){
         ProblemDetail body = ProblemDetail.forStatusAndDetail(

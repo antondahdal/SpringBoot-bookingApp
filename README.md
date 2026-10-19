@@ -15,7 +15,7 @@ This project is how I work with **Spring Boot in depth** (web, security, data, t
 - **Resilience4j** (circuit breaker, retry), `WebClient`
 - **Spring Cloud Gateway** (MVC)
 - Actuator + Micrometer
-- SQL (H2 for local; PostgreSQL next), Docker Compose, Maven
+- SQL (H2 when you run a service with Maven; PostgreSQL in Docker Compose), Docker Compose, Maven, Redis for the Book gate
 
 ---
 
@@ -62,6 +62,7 @@ Today the three services still run in one Spring Boot process, but they talk thr
 | **Correlation id header** | `X-Correlation-Id` is created at the edge (or reused), passed on every downstream call, and returned, so one request can be traced across services. |
 | **Circuit breaker on the Event call** | If Event keeps failing, the breaker opens and Book returns **503** fast instead of piling up threads. Sold out (**409**) and not found (**404**) do not count as failures. A slow Event (3 s client timeout) returns **502**. |
 | **Retry only on safe reads** | The GET to Auth may retry. Book is never retried blindly — a retry could take seats twice. |
+| **Click id on Book** | The Book body must include `clickId`. Booking stores it on the ticket (`bookings.click_id`, unique). Event stores it on the hold (`seat_holds.click_id`, unique). The same id, same event, and same seat count returns the first ticket and does not take another seat. A different event or seat count for that id is **409**. Missing `clickId` is **400**. |
 | **Outbox + `@TransactionalEventListener(AFTER_COMMIT)`** | The notification runs only after the ticket is committed, never inside the lock. The outbox row is written in the same transaction as the ticket; a scheduled poller retries anything still `PENDING`. |
 | **Health probes** | Liveness vs readiness on Actuator, used by the Compose health check. |
 | **Metrics on `book()`** | Count and timing of Book through Micrometer, readable on `/actuator/metrics`. |
@@ -73,7 +74,7 @@ Today the three services still run in one Spring Boot process, but they talk thr
 
 - **JWT secret comes from the environment** (`JWT_SECRET`), never from the repo. The app does not start without it.
 - **Roles on URLs:** only `ORGANIZER` / `ADMIN` create or edit events and venues; only `ATTENDEE` books.
-- **CORS** allows only the front-end origin (`http://localhost:3000`) on `/api/**`. CORS protects the user's browser from other sites; the API itself is protected by the token and the role rules.
+- **CORS** allows the front-end origins in `app.cors.allowed-origins` (local `http://localhost:3000` and the GitHub Pages origin). CORS protects the user's browser from other sites; the API itself is protected by the token and the role rules.
 - **CSRF is off** because the API is stateless: the token travels in the `Authorization` header, not in a session cookie.
 
 ---
@@ -110,13 +111,17 @@ Gateway (port **8081**, Book route → Booking):
 
 Windows: `.\mvnw.cmd -f gateway/pom.xml spring-boot:run`
 
-Or both with Docker Compose (reads `JWT_SECRET` from your shell; the gateway waits until Booking is healthy):
+Or the whole set with Docker Compose. Compose starts PostgreSQL (one server, a database each for Auth, Event, and Booking) and Redis. The gateway's Book gate is a token bucket in Redis: 5 tokens, one token back every 15 seconds. A Maven run without Compose still uses H2, and the gate keeps that jar in memory.
 
-```bash
+PowerShell:
+
+```powershell
+$env:JWT_SECRET = "<your-secret-at-least-32-chars>"
+$env:APP_INTERNAL_TOKEN = "<any-internal-token>"
 docker compose up --build
 ```
 
-Phone Book: `POST http://localhost:8081/api/events/{id}/bookings` (same path as `BookingController`). Browse GET is not on the gateway yet — use **8080**.
+Phone Book: `POST http://localhost:8081/api/events/{id}/bookings` (same path as `BookingController`). The front end in `event-booking-demo` talks only to the gateway on port **8081**.
 
 ---
 

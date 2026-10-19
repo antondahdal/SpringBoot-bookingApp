@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import com.eventbooking.event_booking_platform.dto.EventResponseDto;
 import com.eventbooking.event_booking_platform.dto.SeatReservationRequestDto;
+import com.eventbooking.event_booking_platform.exception.ClickIdMismatchException;
 import com.eventbooking.event_booking_platform.exception.DownstreamServiceException;
 import com.eventbooking.event_booking_platform.exception.HoldDataExceedTimeException;
 import com.eventbooking.event_booking_platform.exception.InsufficientSeatsException;
@@ -35,9 +36,10 @@ public class EventClient {
 
     @CircuitBreaker(name = "event" , fallbackMethod = "reserveSeatsFallback")
     
-    public EventResponseDto reserveSeats(Long eventId, int seats){
+    public EventResponseDto reserveSeats(Long eventId, int seats, String clickId){
         SeatReservationRequestDto dto = new SeatReservationRequestDto();
         dto.setSeats(seats);
+        dto.setClickId(clickId);
         ServletRequestAttributes attrs =(ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         String authHeader = attrs.getRequest().getHeader("Authorization");
         String correlationId = (String) attrs.getRequest().getAttribute("X-Correlation-Id");
@@ -50,6 +52,10 @@ public class EventClient {
             
         } catch (WebClientResponseException  e) {
             if(e.getStatusCode().isSameCodeAs(HttpStatus.CONFLICT)){
+                String raw = e.getResponseBodyAsString();
+                if (raw != null && raw.contains("Click id already used")) {
+                    throw new ClickIdMismatchException("This click id was already used for a different book.");
+                }
                 throw new InsufficientSeatsException ("there is no Seat left");
             }
             if(e.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)){
@@ -67,8 +73,8 @@ public class EventClient {
       return resDto;
     }
 
-    private EventResponseDto reserveSeatsFallback(Long eventId, int seats, Throwable throwable) throws Throwable{
-        if (throwable instanceof InsufficientSeatsException||throwable instanceof ResourceNotFoundException) throw throwable;
+    private EventResponseDto reserveSeatsFallback(Long eventId, int seats, String clickId, Throwable throwable) throws Throwable{
+        if (throwable instanceof InsufficientSeatsException||throwable instanceof ResourceNotFoundException||throwable instanceof ClickIdMismatchException) throw throwable;
         if (throwable instanceof CallNotPermittedException ) throw throwable; 
         throw new DownstreamServiceException("There is internal err");
     

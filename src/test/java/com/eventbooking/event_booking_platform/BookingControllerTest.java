@@ -35,12 +35,12 @@ public class BookingControllerTest {
    @WithMockUser(roles = "ATTENDEE")
     void doBooking() throws Exception {
         when(bookingService.book(any(), eq(1L)))
-            .thenReturn(new BookingResponseDto(1L, 1L, 10L, 2));
+            .thenReturn(new BookingResponseDto(1L, 1L, 10L, 2, "11111111-1111-1111-1111-111111111111"));
 
         mockMvc.perform(post("/api/events/1/bookings")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"seats\": 2}"))
+                .content("{\"seats\": 2, \"clickId\": \"11111111-1111-1111-1111-111111111111\"}"))
             .andExpect(status().isCreated());
     }
 
@@ -51,7 +51,7 @@ public class BookingControllerTest {
         mockMvc.perform(post("/api/events/1/bookings")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"seats\": 2}"))
+                .content("{\"seats\": 2, \"clickId\": \"11111111-1111-1111-1111-111111111111\"}"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -64,8 +64,18 @@ public class BookingControllerTest {
     mockMvc.perform(post("/api/events/1/bookings")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"seats\": 2}"))
+                .content("{\"seats\": 2, \"clickId\": \"11111111-1111-1111-1111-111111111111\"}"))
             .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(roles = "ATTENDEE")
+    void bookWithoutClickIdIs400() throws Exception {
+        mockMvc.perform(post("/api/events/1/bookings")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"seats\": 2}"))
+            .andExpect(status().isBadRequest());
     }
     }
     

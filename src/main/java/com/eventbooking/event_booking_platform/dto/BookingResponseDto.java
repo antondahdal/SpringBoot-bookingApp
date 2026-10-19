@@ -10,4 +10,5 @@ public class BookingResponseDto {
     private Long eventId;
     private Long userId;
     private int seats;
+    private String clickId;
 }

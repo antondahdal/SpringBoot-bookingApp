@@ -1,0 +1,131 @@
+# Free Render blueprint. One Postgres and one Redis for the whole demo.
+# Free web services sleep after 15 minutes. The free Postgres expires after 30 days.
+databases:
+  - name: event-booking-pg
+    plan: free
+    databaseName: booking
+    user: booking
+
+services:
+  - type: keyvalue
+    name: event-booking-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: event-booking-auth
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./auth/Dockerfile
+    dockerContext: ./auth
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=50.0"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_CORS_ORIGINS
+        value: https://antondahdal.github.io
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event-booking-pg
+          property: connectionString
+
+  - type: web
+    name: event-booking-event
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./event/Dockerfile
+    dockerContext: ./event
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=50.0"
+      - key: JWT_SECRET
+        fromService:
+          name: event-booking-auth
+          type: web
+          envVarKey: JWT_SECRET
+      - key: APP_INTERNAL_TOKEN
+        generateValue: true
+      - key: APP_CORS_ORIGINS
+        value: https://antondahdal.github.io
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event-booking-pg
+          property: connectionString
+
+  - type: web
+    name: event-booking-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=50.0"
+      - key: JWT_SECRET
+        fromService:
+          name: event-booking-auth
+          type: web
+          envVarKey: JWT_SECRET
+      - key: APP_INTERNAL_TOKEN
+        fromService:
+          name: event-booking-event
+          type: web
+          envVarKey: APP_INTERNAL_TOKEN
+      - key: APP_CORS_ORIGINS
+        value: https://antondahdal.github.io
+      - key: DATABASE_URL
+        fromDatabase:
+          name: event-booking-pg
+          property: connectionString
+      - key: AUTH_SERVICE_BASE_URL
+        fromService:
+          name: event-booking-auth
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: EVENT_SERVICE_BASE_URL
+        fromService:
+          name: event-booking-event
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: event-booking-gateway
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./gateway/Dockerfile
+    dockerContext: ./gateway
+    healthCheckPath: /health
+    envVars:
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=50.0"
+      - key: APP_CORS_ORIGINS
+        value: https://antondahdal.github.io
+      - key: REDIS_URL
+        fromService:
+          name: event-booking-redis
+          type: keyvalue
+          property: connectionString
+      - key: AUTH_SERVICE_URI
+        fromService:
+          name: event-booking-auth
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: EVENT_SERVICE_URI
+        fromService:
+          name: event-booking-event
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: BOOKING_SERVICE_URI
+        fromService:
+          name: event-booking-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL

@@ -1,6 +1,7 @@
 package com.eventbooking.event_booking_platform.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,7 @@ public class BookingWriter {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public  BookingResponseDto writeBook(UserResponseDto resUser,int seats, EventResponseDto eventRes){
+    public  BookingResponseDto writeBook(UserResponseDto resUser,int seats, EventResponseDto eventRes, String clickId){
         Booking bookToSave= new Booking();
 
        bookToSave.setEventId(eventRes.getId());
@@ -48,13 +49,14 @@ public class BookingWriter {
       bookToSave.setUserId(resUser.getId());
       bookToSave.setEventTitle(eventRes.getTitle());
       bookToSave.setStatus(BookingStatus.CONFIRMED);
+      bookToSave.setClickId(clickId);
       Booking book=bookingRepository.save(bookToSave);
       meterRegistry.counter("bookings.created").increment();
       populateMessageAndSave( book);
       populateToConfirm(book,eventRes.getSeatHoldId());
       // Must stay inside this transaction: the listener is AFTER_COMMIT and only fires when there is a commit.
       publisher.publishEvent(new BookingCreatedEvent(book.getId()));
-       return new BookingResponseDto(book.getId(),book.getEventId(), book.getUserId(),book.getSeats());
+       return new BookingResponseDto(book.getId(),book.getEventId(), book.getUserId(),book.getSeats(), book.getClickId());
 
     }
     private void populateMessageAndSave(Booking book){
@@ -76,5 +78,10 @@ public class BookingWriter {
     @Transactional(readOnly = true)
     public List<Booking> findByUserId(Long userId) {
         return bookingRepository.findByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Booking> findByClickId(String clickId) {
+        return bookingRepository.findByClickId(clickId);
     }
 }
