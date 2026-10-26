@@ -58,6 +58,7 @@ Then one sentence why a mid-level Java role gets what’s **left**. Then the fir
 Anton asked (2026-09-21): **always walk the story** so he can connect the dots. Assume a new Spring type is unknown.
 
 - **Story first:** phone → which service → which line we are on. Why this object exists **now**. What job it is **not**.
+- **Order** (Anton, 2026-10-26): method names only, one line, then one short question. File, method, the ask. Do not ask a later hop while an earlier one is open.
 - **New type:** 3–5 sentences (what it is, who creates it, what the call does). Contrast with HTTP, a table, and the concert `Event`.
 - Then one step: which file, the few lines to type. He types. Wait.
 - Do not dump a finished feature and then explain it.
